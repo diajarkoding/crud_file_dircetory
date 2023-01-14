@@ -71,6 +71,30 @@ class AccessPhoneStorage {
     }
   }
 
+  // Future<void> createSubDirectory({required String folderName}) async {
+  //   try {
+  //     // create root app  folder
+  //     if (_directory == null ||
+  //         (_directory != null && !await _directory!.exists())) {
+  //       await _createRootAppDirectory();
+  //     }
+
+  //     // request permission untuk membuat folder
+  //     if (await _requestPermission(Permission.manageExternalStorage)) {
+  //       await Directory('$_fullPathAppRootDir/$folderName')
+  //           .create(recursive: true);
+  //     }
+
+  //     if (await Directory('$_fullPathAppRootDir/$folderName').exists()) {
+  //       debugPrint('Sub direktori sukses dibuat');
+  //     } else {
+  //       debugPrint('Sub direktori gagal dibuat');
+  //     }
+  //   } catch (e) {
+  //     debugPrint('Gagal membuat sub direktori: $e');
+  //   }
+  // }
+
   Future<bool> saveIntoStorage({
     required Uint8List data,
     required String fileName,
@@ -120,5 +144,50 @@ class AccessPhoneStorage {
 
       return false;
     }
+  }
+
+  Future<bool> getPermissions() async {
+    bool gotPermissions = false;
+
+    var androidInfo = await DeviceInfoPlugin().androidInfo;
+    var release =
+        androidInfo.version.release; // Version number, example: Android 12
+    var sdkInt = androidInfo.version.sdkInt; // SDK, example: 31
+    var manufacturer = androidInfo.manufacturer;
+    var model = androidInfo.model;
+
+    debugPrint('Android $release (SDK $sdkInt), $manufacturer $model');
+
+    if (Platform.isAndroid) {
+      var storage = await Permission.storage.status;
+
+      if (storage != PermissionStatus.granted) {
+        await Permission.storage.request();
+      }
+
+      if (sdkInt >= 30) {
+        var storageExternal = await Permission.manageExternalStorage.status;
+
+        if (storageExternal != PermissionStatus.granted) {
+          await Permission.manageExternalStorage.request();
+        }
+
+        storageExternal = await Permission.manageExternalStorage.status;
+
+        if (storageExternal == PermissionStatus.granted &&
+            storage == PermissionStatus.granted) {
+          gotPermissions = true;
+        }
+      } else {
+        // (SDK < 30)
+        storage = await Permission.storage.status;
+
+        if (storage == PermissionStatus.granted) {
+          gotPermissions = true;
+        }
+      }
+    }
+
+    return gotPermissions;
   }
 }

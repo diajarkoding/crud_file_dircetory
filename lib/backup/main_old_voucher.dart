@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:convert_widget/certificate.dart';
-import 'package:convert_widget/sebelum%20fix/sebelum-fix-vocher-acces.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:widgets_to_image/widgets_to_image.dart';
 
 void main() {
@@ -35,6 +36,65 @@ class MainPageState extends State<MainPage> {
   // to save image bytes of widget
   Uint8List? imageFile;
 
+  Future saveImage(Uint8List bytes) async {
+    final appStorage = await getApplicationDocumentsDirectory();
+    final file = File('${appStorage.path}/image.png');
+    file.create(recursive: true);
+  }
+
+  Future saveImage2(Uint8List bytes) async {
+    final extDir = await getExternalStorageDirectory();
+
+// Path of file
+    final myImagePath = '${extDir!.path}/voucher.png';
+
+// Create directory inside where file will be saved
+    await Directory(myImagePath).create();
+
+    final file = File('${extDir.path}/voucher.png');
+
+    debugPrint(file.toString());
+  }
+
+  Future saveImage3(Uint8List bytes) async {
+    final appStorage = await getExternalStorageDirectory();
+    final file = File('${appStorage!.path}/voucher-smn.jpeg');
+    file.writeAsBytes(bytes);
+    debugPrint(file.path);
+  }
+
+  Future saveImage4(Uint8List bytes) async {
+    const rootAppFolder = 'test-app';
+    String fullPathAppRootDir = '';
+
+    await Permission.storage.request();
+
+    Directory? directory = await getExternalStorageDirectory();
+    fullPathAppRootDir = "";
+    List<String>? folders = directory?.path.split("/");
+    for (final folderName in folders!) {
+      if (folderName != "") {
+        if (folderName != "Android") {
+          fullPathAppRootDir = '$fullPathAppRootDir/$folderName';
+        } else {
+          break;
+        }
+      }
+    }
+
+    fullPathAppRootDir = '$fullPathAppRootDir/$rootAppFolder';
+
+    directory = Directory(fullPathAppRootDir);
+
+    await directory.create(recursive: true);
+
+    final file = File('${directory.path}/voucher-smn.jpeg');
+
+    file.writeAsBytes(bytes);
+
+    debugPrint(file.path);
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
@@ -62,30 +122,30 @@ class MainPageState extends State<MainPage> {
         floatingActionButton: FloatingActionButton(
           child: const Icon(Icons.image_outlined),
           onPressed: () async {
-            String fileName = 'voucher';
+            // String fileName = 'voucher';
             await controller.capture().then((Uint8List? image) {
               setState(() {
                 imageFile = image;
               });
-
+              saveImage4(imageFile!);
               debugPrint('Screenshot done');
             }).catchError((onError) {
               debugPrint(onError);
             });
 
-            if (fileName == 'voucher') {
-              bool isOk = await AccessPhoneStorage.instance
-                  .saveIntoStorage(fileName: fileName, data: imageFile!);
-              if (isOk) {
-                debugPrint('$fileName berhasil dibuat');
-              }
-            } else {
-              bool isOk = await AccessPhoneStorage.instance
-                  .saveIntoStorage(fileName: '$fileName-1', data: imageFile!);
-              if (isOk) {
-                debugPrint('$fileName-1 berhasil dibuat');
-              }
-            }
+            // if (fileName == 'voucher') {
+            //   bool isOk = await AccessPhoneStorage.instance
+            //       .saveIntoStorage(fileName: fileName, data: imageFile);
+            //   if (isOk) {
+            //     debugPrint('$fileName berhasil dibuat');
+            //   }
+            // } else {
+            //   bool isOk = await AccessPhoneStorage.instance
+            //       .saveIntoStorage(fileName: '$fileName-1', data: imageFile);
+            //   if (isOk) {
+            //     debugPrint('$fileName-1 berhasil dibuat');
+            //   }
+            // }
           },
         ),
       );
