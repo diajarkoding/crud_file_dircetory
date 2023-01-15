@@ -3,7 +3,12 @@ import 'dart:typed_data';
 import 'package:convert_widget/certificate.dart';
 import 'package:convert_widget/sebelum%20fix/sebelum-fix-vocher-acces.dart';
 import 'package:flutter/material.dart';
-import 'package:widgets_to_image/widgets_to_image.dart';
+import 'package:screenshot/screenshot.dart';
+
+import 'utils/widget_to_image_controller.dart';
+import 'widgets/widget_to_image.dart';
+
+// import 'package:widgets_to_image/widgets_to_image.dart';
 
 void main() {
   HttpOverrides.global = MyHttpOverrides();
@@ -30,9 +35,10 @@ class MainPage extends StatefulWidget {
 }
 
 class MainPageState extends State<MainPage> {
-  // WidgetsToImageController to access widget
   WidgetsToImageController controller = WidgetsToImageController();
-  // to save image bytes of widget
+
+  ScreenshotController screenshot = ScreenshotController();
+
   Uint8List? imageFile;
 
   @override
@@ -50,7 +56,7 @@ class MainPageState extends State<MainPage> {
             ),
             WidgetsToImage(
               controller: controller,
-              child: cardWidget(),
+              child: Material(color: Colors.transparent, child: cardWidget()),
             ),
             const Text(
               "Images",
